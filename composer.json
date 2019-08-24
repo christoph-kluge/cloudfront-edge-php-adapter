@@ -1,0 +1,35 @@
+{
+  "name": "christoph-kluge/cloudfront-edge-php-adapter",
+  "description": "A cloudfront edge event transformer for symfony or laravel request objects",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Christoph Kluge",
+      "email": "work@christoph-kluge.eu"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Sikei\\CloudfrontEdge\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Sikei\\CloudfrontEdge\\Tests\\": "tests/"
+    }
+  },
+  "require": {},
+  "require-dev": {
+    "illuminate/http": "^5.8",
+    "symfony/http-foundation": "^4.3",
+    "phpunit/phpunit": "^8.3"
+  },
+  "scripts": {
+    "ensure-installed": "composer install --ansi -n -q",
+    "unit": [
+      "@ensure-installed",
+      "phpunit --colors=always -c phpunit.xml.dist"
+    ]
+  }
+}

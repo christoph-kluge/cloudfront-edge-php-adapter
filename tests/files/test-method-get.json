@@ -1,0 +1,34 @@
+{
+  "Records": [
+    {
+      "cf": {
+        "config": {
+          "distributionDomainName": "aaa111bbb222c3.cloudfront.net",
+          "distributionId": "EEEEEE9FFFFFF0",
+          "eventType": "origin-request"
+        },
+        "request": {
+          "body": {
+            "action": "read-only",
+            "data": "",
+            "encoding": "base64",
+            "inputTruncated": false
+          },
+          "clientIp": "1.2.3.4",
+          "headers": [],
+          "method": "GET",
+          "origin": {
+            "s3": {
+              "authMethod": "none",
+              "customHeaders": [],
+              "domainName": "some-s3-bucket.s3.amazonaws.com",
+              "path": ""
+            }
+          },
+          "querystring": "",
+          "uri": "\/my-request"
+        }
+      }
+    }
+  ]
+}
