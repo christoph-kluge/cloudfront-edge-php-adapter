@@ -19,7 +19,7 @@ class RequestFactory
             $this->getMethod($cfRequest),
             $this->getParameters($cfRequest),
             $this->getCookies($cfRequest),
-            [],
+            $this->getFiles($cfRequest),
             $this->getServer($cfRequest),
             $this->getContent($cfRequest)
         );
@@ -126,5 +126,76 @@ class RequestFactory
         }
 
         return $new;
+    }
+
+    private function getFiles(array $cfRequest): array
+    {
+        if (!isset($cfRequest['headers']['content-type'][0]['value'])) {
+            return [];
+        }
+
+        $contentType = $cfRequest['headers']['content-type'][0]['value'];
+        if ('multipart/form-data' !== substr($contentType, 0, 19)) {
+            return [];
+        }
+
+        $content = $this->getContent($cfRequest);
+
+        preg_match('#multipart/form-data; boundary=(.*)#', $contentType, $matches);
+
+        $fileDelimiter = $matches['1'];
+
+        $rawFiles = explode($fileDelimiter, $content);
+
+        $files = [];
+        foreach ($rawFiles as $rawFile) {
+            if (strlen($rawFile) <= 8) { // @TODO: this is super wrong like that.. need to fix it later
+                continue;
+            }
+
+            list($rawFileHeaders, $fileBody) = explode("\r\n\r\n", $rawFile, 2);
+
+            $tempFile = tempnam(sys_get_temp_dir(), uniqid());
+            file_put_contents($tempFile, $fileBody);
+
+            // @FIXME: I guess there is a bit smarter way to do this.. check if there is existing snippets for this
+            $fileHeaders = [];
+            foreach (explode("\r\n", $rawFileHeaders) as $headerLine) {
+                if (empty($headerLine)) {
+                    continue;
+                }
+
+//                var_dump($headerLine);
+                list($fileHEader, $fileHEaderValue) = explode(': ', $headerLine);
+
+                $fileHeaders[$fileHEader] = $fileHEaderValue;
+            }
+
+            // @FIXME: I guess there is a bit smarter way to do this.. check if there is existing snippets for this
+            preg_match('#form-data; name="(.*)"; filename="(.*)"#i', $fileHeaders['Content-Disposition'], $matches);
+
+            $formName = $matches[1];
+            $origFilename = $matches[2];
+            $type = $fileHeaders['Content-Type'] ?? '';
+            $size = strlen($fileBody);
+            $tmp_name = $tempFile;
+            $error = 0; // @FIXME: check what kind of errors might appear with file uploads and if we need to take care of them
+
+//            $_FILES['userfile']['name'] // The original name of the file on the client machine.
+//            $_FILES['userfile']['type'] // The mime type of the file, if the browser provided this information. An example would be "image/gif". This mime type is however not checked on the PHP side and therefore don't take its value for granted.
+//            $_FILES['userfile']['size'] // The size, in bytes, of the uploaded file.
+//            $_FILES['userfile']['tmp_name'] // The temporary filename of the file in which the uploaded file was stored on the server.
+//            $_FILES['userfile']['error'] // The error code associated with this file upload.
+
+            $files[$formName] = [
+                'name' => $origFilename,
+                'type' => $type,
+                'size' => $size,
+                'tmp_name' => $tmp_name,
+                'error' => $error,
+            ];
+        }
+
+        return $files;
     }
 }

@@ -150,6 +150,6 @@ class ResponseFactoryTest extends TestCase
         $cfResponse = $this->factory->toCloudfrontEvent($response);
 
         $this->assertIsString($cfResponse['body']);
-        $this->assertSame('{}', $cfResponse['body']);
+        $this->assertSame('{}', $cfResponse['body']); // Check why this is "{}"
     }
 }

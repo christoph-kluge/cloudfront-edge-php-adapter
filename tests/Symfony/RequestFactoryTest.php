@@ -5,6 +5,7 @@ namespace Sikei\CloudfrontEdge\Unit\Symfony;
 use Sikei\CloudfrontEdge\Laravel\RequestFactory;
 use Sikei\CloudfrontEdge\Symfony\RequestFactory as SymfonyRequestFactory;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class RequestFactoryTest extends TestCase
 {
@@ -100,6 +101,63 @@ class RequestFactoryTest extends TestCase
 
         $this->assertEquals(20, $request->get('limit'));
         $this->assertEquals(1, $request->get('page'));
+    }
 
+    public function test_file_upload_single_image()
+    {
+        // @TODO: take a smaller test-file for this
+        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload.json'), true);
+
+        // vendor/symfony/http-foundation/Tests/FileBagTest.php
+        $request = $this->factory->fromCloudfrontEvent($event);
+
+        $this->assertSame(1, $request->files->count());
+
+        $file = $request->files->get('file');
+        $this->assertInstanceOf(UploadedFile::class, $file);
+
+        /** @var UploadedFile $file */
+        $this->assertEquals('laravel.jpg', $file->getClientOriginalName());
+        $this->assertEquals('image/jpeg', $file->getClientMimeType());
+    }
+
+    public function test_file_upload_multiple_images()
+    {
+        // @TODO: take a smaller test-file for this
+        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload-multiple.json'), true);
+
+        // vendor/symfony/http-foundation/Tests/FileBagTest.php
+        $request = $this->factory->fromCloudfrontEvent($event);
+
+        $this->assertSame(2, $request->files->count());
+
+        // FILE 1
+        $jpeg = $request->files->get('jpeg');
+        $this->assertInstanceOf(UploadedFile::class, $jpeg);
+
+        /** @var UploadedFile $jpeg */
+        $this->assertEquals('laravel.jpg', $jpeg->getClientOriginalName());
+        $this->assertEquals('image/jpeg', $jpeg->getClientMimeType());
+
+        // FILE 2
+        $svg = $request->files->get('svg');
+        $this->assertInstanceOf(UploadedFile::class, $svg);
+
+        /** @var UploadedFile $jpeg */
+        $this->assertEquals('logotype.min.svg', $svg->getClientOriginalName());
+        $this->assertEquals('application/octet-stream', $svg->getClientMimeType());
+    }
+
+    public function test_file_upload_multiple_array()
+    {
+        $this->markTestSkipped('not yet implemented - need to get cases for files[], files[a][b] and probably files[a][b][]');
+
+        // @TODO: take a smaller test-file for this
+        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload-mutliple-mixed.json'), true);
+
+        // vendor/symfony/http-foundation/Tests/FileBagTest.php
+        $request = $this->factory->fromCloudfrontEvent($event);
+
+        $this->assertSame(4, $request->files->count());
     }
 }

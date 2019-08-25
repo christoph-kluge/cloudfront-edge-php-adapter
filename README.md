@@ -53,9 +53,13 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 * [x] Support x-www-form-urlencoded form post requests
 * [x] Support for cookies
 * [ ] Cloudfront MAY send multiple list-items for a single header
-* [X] Response might send headers as multiple list-items inside the response
-* [ ] Check POST with different content-types
-* [ ] Check POST with attachments (uploaded files)
+* [x] Response might send headers as multiple list-items inside the response
+* [ ] Check POST with different content-types (json, x-www-form-urlencode, ..?)
+* [x] Check POST with attachments (single file)
+* [x] Check POST with attachments (multiple single named files)
+* [ ] Check POST with attachments (multiple files as array)
+* [ ] Check 204 responses with JSON why they return "{}" instead of ""
+
 
 # License
 
