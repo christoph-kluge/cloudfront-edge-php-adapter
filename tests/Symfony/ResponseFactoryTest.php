@@ -3,7 +3,7 @@
 namespace Sikei\CloudfrontEdge\Unit\Symfony;
 
 use Illuminate\Http\Response;
-use Sikei\CloudfrontEdge\Laravel\ResponseFactory;
+use Sikei\CloudfrontEdge\Symfony\ResponseFactory;
 use PHPUnit\Framework\TestCase;
 
 class ResponseFactoryTest extends TestCase

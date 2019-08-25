@@ -1,8 +1,8 @@
 <?php
 
-namespace Sikei\CloudfrontEdge\Laravel;
+namespace Sikei\CloudfrontEdge\Symfony;
 
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 class ResponseFactory
 {
