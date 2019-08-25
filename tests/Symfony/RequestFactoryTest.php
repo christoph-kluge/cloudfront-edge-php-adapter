@@ -33,6 +33,19 @@ class RequestFactoryTest extends TestCase
         $this->assertEquals('POST', $request->method());
     }
 
+    public function test_post_with_form_urlencoded_body()
+    {
+        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-post-form-urlencoded-body.json'), true);
+
+        $request = $this->factory->fromCloudfrontEvent($event);
+
+        $this->assertEquals('POST', $request->method());
+        $this->assertEquals('application/x-www-form-urlencoded', $request->header('content-type'));
+
+        $this->assertSame('john.doe@example.net', $request->input('email'));
+        $this->assertSame('john.doe@example.net', $request->input('password'));
+    }
+
     public function test_delete()
     {
         $event = json_decode(file_get_contents(__DIR__ . '/../files/test-method-post-with-json-body.json'), true);

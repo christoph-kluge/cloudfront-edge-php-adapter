@@ -14,15 +14,17 @@ class RequestFactory
 
         Request::enableHttpMethodParameterOverride();
 
-        return Request::create(
+        $request = Request::create(
             $this->getUri($cfConfig, $cfRequest),
             $this->getMethod($cfRequest),
-            [],
+            $this->getParameters($cfRequest),
             [],
             [],
             $this->getServer($cfRequest),
             $this->getContent($cfRequest)
         );
+
+        return $request;
     }
 
     private function getUri(array $cfConfig, array $cfRequest): string
@@ -83,5 +85,21 @@ class RequestFactory
             }
         }
         return $server;
+    }
+
+    private function getParameters(array $cfRequest): array
+    {
+        if (!in_array($this->getMethod($cfRequest), ['POST', 'PUT', 'DELETE', 'PATCH'])) {
+            return [];
+        }
+
+        if (!isset($cfRequest['headers']['content-type'][0]['value'])
+            || $cfRequest['headers']['content-type'][0]['value'] !== 'application/x-www-form-urlencoded') { // check
+            return [];
+        }
+
+        parse_str($this->getContent($cfRequest), $data);
+
+        return $data;
     }
 }

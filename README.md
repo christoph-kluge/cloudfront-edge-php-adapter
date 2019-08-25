@@ -50,9 +50,10 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 * [x] Simple GET request
 * [x] Simple POST request
 * [x] Support laravel's dedicated response objects (Response, RedirectResponse, JsonResponse)
+* [x] Support x-www-form-urlencoded form post requests
 * [ ] Cloudfront MAY send multiple list-items for a single header
 * [ ] Response might send headers as multiple list-items inside the response
-* [ ] Check POST with different Content-Types
+* [ ] Check POST with different content-types
 * [ ] Check POST with attachments (uploaded files)
 
 # License
