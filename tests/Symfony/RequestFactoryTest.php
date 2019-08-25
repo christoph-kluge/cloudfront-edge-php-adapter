@@ -33,6 +33,17 @@ class RequestFactoryTest extends TestCase
         $this->assertEquals('POST', $request->method());
     }
 
+    public function test_cookies()
+    {
+        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-cookies.json'), true);
+
+        $request = $this->factory->fromCloudfrontEvent($event);
+
+        $this->assertCount(3, $request->cookies->all());
+        $this->assertCount(3, $request->cookie());
+        $this->assertSame('MyValue', $request->cookie('MyCookie'));
+    }
+
     public function test_post_with_form_urlencoded_body()
     {
         $event = json_decode(file_get_contents(__DIR__ . '/../files/test-post-form-urlencoded-body.json'), true);

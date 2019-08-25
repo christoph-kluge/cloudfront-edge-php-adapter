@@ -18,7 +18,7 @@ class RequestFactory
             $this->getUri($cfConfig, $cfRequest),
             $this->getMethod($cfRequest),
             $this->getParameters($cfRequest),
-            [],
+            $this->getCookies($cfRequest),
             [],
             $this->getServer($cfRequest),
             $this->getContent($cfRequest)
@@ -101,5 +101,30 @@ class RequestFactory
         parse_str($this->getContent($cfRequest), $data);
 
         return $data;
+    }
+
+    private function getCookies(array $cfRequest): array
+    {
+        if (!isset($cfRequest['headers']['cookie'][0]['value'])) {
+            return [];
+        }
+
+        $cookieHeaderLine = $cfRequest['headers']['cookie'][0]['value'];
+        $cookies = array_filter(explode(';', $cookieHeaderLine));
+
+        $cookies = array_map(function ($item) {
+            list($key, $value) = explode('=', $item, 2);
+            return [
+                'key' => trim($key),
+                'value' => trim($value),
+            ];
+        }, $cookies);
+
+        $new = [];
+        foreach ($cookies as $item) {
+            $new[$item['key']] = $item['value'];
+        }
+
+        return $new;
     }
 }
