@@ -116,7 +116,7 @@ class RequestFactory
             list($key, $value) = explode('=', $item, 2);
             return [
                 'key' => trim($key),
-                'value' => trim($value),
+                'value' => urldecode(trim($value)),
             ];
         }, $cookies);
 
