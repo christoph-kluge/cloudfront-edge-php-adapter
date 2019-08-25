@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use PHPUnit\Framework\TestCase;
-use Sikei\CloudfrontEdge\Symfony\ResponseFactory;
+use Sikei\CloudfrontEdge\Laravel\ResponseFactory;
 
 class ResponseFactoryTest extends TestCase
 {
@@ -16,7 +16,6 @@ class ResponseFactoryTest extends TestCase
     {
         $this->factory = new ResponseFactory();
     }
-
 
     public function test_normal_response()
     {
