@@ -53,7 +53,7 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 * [x] Support x-www-form-urlencoded form post requests
 * [x] Support for cookies
 * [ ] Cloudfront MAY send multiple list-items for a single header
-* [ ] Response might send headers as multiple list-items inside the response
+* [X] Response might send headers as multiple list-items inside the response
 * [ ] Check POST with different content-types
 * [ ] Check POST with attachments (uploaded files)
 

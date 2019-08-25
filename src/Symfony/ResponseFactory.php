@@ -22,13 +22,19 @@ class ResponseFactory
      */
     private function getHeaders(Response $response): array
     {
-        $headers = [];
+        $cfHeaders = [];
         foreach ($response->headers->all() as $key => $value) {
-            $headers[$key] = [[
-                'key' => $key,
-                'value' => (string)$value[0],
-            ]];
+
+            $headers = [];
+            foreach ($value as $cookie) {
+                $headers[] = [
+                    'key' => $key,
+                    'value' => (string)$cookie,
+                ];
+            }
+
+            $cfHeaders[$key] = $headers;
         }
-        return $headers;
+        return $cfHeaders;
     }
 }
