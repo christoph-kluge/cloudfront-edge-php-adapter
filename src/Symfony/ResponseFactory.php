@@ -12,7 +12,7 @@ class ResponseFactory
         return [
             "status" => $response->getStatusCode(),
             "headers" => $this->getHeaders($response),
-            "body" => $response->getContent(),
+            "body" => (string)$response->getContent(),
         ];
     }
 

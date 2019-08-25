@@ -2,10 +2,11 @@
 
 namespace Sikei\CloudfrontEdge\Unit\Symfony;
 
-use Illuminate\Http\Response;
 use Sikei\CloudfrontEdge\Symfony\ResponseFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class ResponseFactoryTest extends TestCase
 {
@@ -74,9 +75,9 @@ class ResponseFactoryTest extends TestCase
 
     public function test_cookies()
     {
-        $response = (new Response())
-            ->withCookie(new Cookie('my-cookie', 'my-value'))
-            ->withCookie(new Cookie('my-second-cookie', 'my-second-value'));
+        $response = new Response();
+        $response->headers->setCookie(new Cookie('my-cookie', 'my-value'));
+        $response->headers->setCookie(new Cookie('my-second-cookie', 'my-second-value'));
 
         $cfResponse = $this->factory->toCloudfrontEvent($response);
 
@@ -96,10 +97,10 @@ class ResponseFactoryTest extends TestCase
 
     public function test_single_headers_and_multiple_headers_in_a_response()
     {
-        $response = (new Response())
-            ->header('my-custom-header', 'value')
-            ->withCookie(new Cookie('my-cookie', 'my-value'))
-            ->withCookie(new Cookie('my-second-cookie', 'my-second-value'));
+        $response = new Response();
+        $response->headers->set('my-custom-header', 'value');
+        $response->headers->setCookie(new Cookie('my-cookie', 'my-value'));
+        $response->headers->setCookie(new Cookie('my-second-cookie', 'my-second-value'));
 
         $cfResponse = $this->factory->toCloudfrontEvent($response);
 
@@ -124,5 +125,31 @@ class ResponseFactoryTest extends TestCase
         $this->assertTrue(isset($cfResponse['headers']['my-custom-header']));
         $this->assertCount(1, $cfResponse['headers']['my-custom-header']);
         $this->assertSame('value', $cfResponse['headers']['my-custom-header'][0]['value']);
+    }
+
+    public function test_response_is_always_a_string()
+    {
+        // The Lambda function result failed validation: The body is not a string, is not an object, or exceeds the maximum size.
+        // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/http-502-bad-gateway.html
+
+        $response = new Response();
+
+        $cfResponse = $this->factory->toCloudfrontEvent($response);
+
+        $this->assertIsString($cfResponse['body']);
+        $this->assertEmpty($cfResponse['body']);
+    }
+
+    public function test_response_json_is_always_a_string()
+    {
+        // The Lambda function result failed validation: The body is not a string, is not an object, or exceeds the maximum size.
+        // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/http-502-bad-gateway.html
+
+        $response = new JsonResponse( null, 204);
+
+        $cfResponse = $this->factory->toCloudfrontEvent($response);
+
+        $this->assertIsString($cfResponse['body']);
+        $this->assertSame('{}', $cfResponse['body']);
     }
 }
