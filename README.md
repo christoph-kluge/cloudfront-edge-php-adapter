@@ -54,12 +54,12 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 * [X] Origin custom - Read custom headers
 * [X] Origin s3 - Read custom headers 
 * [x] Response might send headers as multiple list-items inside the response
-* [x] Attachments - Single named input (<input type="file" name="myfile"'/>)
-* [x] Attachments - Multiple single named inputs (<input type="file" name="myfile1"/> <input type="file" name="myfile1"/>)
+* [x] Attachments - Single named input (<input type="file" name="myfile"/>)
+* [x] Attachments - Multiple single named inputs (`<input type="file" name="myfile1"/>` `<input type="file" name="myfile1"/>`)
 
 # TODOs
 
-* [ ] POST with attachments (<input type="file" name="files[]"/> <input type="file" name="files[]"/>)
+* [ ] POST with attachments (`<input type="file" name="files[]"/>` `<input type="file" name="files[]"/>`)
 * [ ] Check POST with different content-types (json, x-www-form-urlencode, ..?)
 * [ ] Check 204 responses with JSON why they return "{}" instead of ""
 * [ ] Cloudfront MAY send multiple list-items for a single header
