@@ -54,7 +54,7 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 * [X] Origin custom - Read custom headers
 * [X] Origin s3 - Read custom headers 
 * [x] Response might send headers as multiple list-items inside the response
-* [x] Attachments - Single named input (<input type="file" name="myfile"/>)
+* [x] Attachments - Single named input (`<input type="file" name="myfile"/>`)
 * [x] Attachments - Multiple single named inputs (`<input type="file" name="myfile1"/>` `<input type="file" name="myfile1"/>`)
 
 # TODOs
