@@ -72,19 +72,19 @@ class RequestFactory
         // https
         $server['HTTPS'] = 'on';
 
-        // Add headers to server
-        foreach ($cfRequest['headers'] as $key => $values) {
-            $origKey = strtoupper($values[0]['key']);
-            $origKey = str_replace('-', '_', $origKey);
+        $s3OriginHeaders = [];
+        $customOriginHeaders = [];
+        $cfHeaders = $this->headersToServer($cfRequest['headers']);
 
-            // CONTENT_* are not prefixed with HTTP_
-            if (0 === strpos($origKey, 'CONTENT_')) {
-                $server[$origKey] = $values[0]['value'];
-            } else {
-                $server['HTTP_' . $origKey] = $values[0]['value'];
-            }
+        if (isset($cfRequest['origin']['s3']['customHeaders'])) {
+            $s3OriginHeaders = $this->headersToServer($cfRequest['origin']['s3']['customHeaders']);
         }
-        return $server;
+
+        if (isset($cfRequest['origin']['custom']['customHeaders'])) {
+            $customOriginHeaders = $this->headersToServer($cfRequest['origin']['custom']['customHeaders']);
+        }
+
+        return array_merge($server, $cfHeaders, $s3OriginHeaders, $customOriginHeaders);
     }
 
     private function getParameters(array $cfRequest): array
@@ -197,5 +197,29 @@ class RequestFactory
         }
 
         return $files;
+    }
+
+    /**
+     * @param array $cfHeaders
+     * @return array
+     */
+    private function headersToServer(array $cfHeaders): array
+    {
+        $server = [];
+
+        // Add headers to server
+        foreach ($cfHeaders as $key => $values) {
+            $origKey = strtoupper($values[0]['key']);
+            $origKey = str_replace('-', '_', $origKey);
+
+            // CONTENT_* are not prefixed with HTTP_
+            if (0 === strpos($origKey, 'CONTENT_')) {
+                $server[$origKey] = $values[0]['value'];
+            } else {
+                $server['HTTP_' . $origKey] = $values[0]['value'];
+            }
+        }
+
+        return $server;
     }
 }

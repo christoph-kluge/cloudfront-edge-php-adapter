@@ -45,21 +45,30 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 });
 ```
 
+# Features
+
+* [x] Support requests with different methods (GET, HEAD, POST, PUT, DELETE, ..)
+* [x] Support laravel's dedicated response objects (Response, RedirectResponse, JsonResponse)
+* [x] Support post requests from html forms with content-type : x-www-form-urlencoded 
+* [x] Support cookies
+* [X] Origin custom - Read custom headers
+* [X] Origin s3 - Read custom headers 
+* [x] Response might send headers as multiple list-items inside the response
+* [x] Attachments - Single named input (<input type="file" name="myfile"'/>)
+* [x] Attachments - Multiple single named inputs (<input type="file" name="myfile1"/> <input type="file" name="myfile1"/>)
+
 # TODOs
 
-* [x] Simple GET request
-* [x] Simple POST request
-* [x] Support laravel's dedicated response objects (Response, RedirectResponse, JsonResponse)
-* [x] Support x-www-form-urlencoded form post requests
-* [x] Support for cookies
-* [ ] Cloudfront MAY send multiple list-items for a single header
-* [x] Response might send headers as multiple list-items inside the response
+* [ ] POST with attachments (<input type="file" name="files[]"/> <input type="file" name="files[]"/>)
 * [ ] Check POST with different content-types (json, x-www-form-urlencode, ..?)
-* [x] Check POST with attachments (single file)
-* [x] Check POST with attachments (multiple single named files)
-* [ ] Check POST with attachments (multiple files as array)
 * [ ] Check 204 responses with JSON why they return "{}" instead of ""
-
+* [ ] Cloudfront MAY send multiple list-items for a single header
+* [ ] Origin custom - Origin Protocol Policy (Mid prio - I guess there might be use-cases where SSL is not used)
+* [ ] Origin custom - Read different path (Low prio - imo not required for lambda)
+* [ ] Origin custom - Ssl protocol (Low prio - imo not required for lambda)
+* [ ] Origin s3 - Origin Protocol Policy (Mid prio - I guess there might be use-cases where SSL is not used)
+* [ ] Origin s3 - Read different path (Low prio - imo not required for lambda)
+* [ ] Origin s3 - Restrict Bucket (Low prio - imo not required for lambda)
 
 # License
 
