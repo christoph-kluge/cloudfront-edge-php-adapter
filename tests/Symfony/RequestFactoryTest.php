@@ -146,6 +146,19 @@ class RequestFactoryTest extends TestCase
         $this->assertEquals('value-3', $request->header('HEADER-3')); // uppercase
     }
 
+
+    public function test_origin_headers_will_override_client_headers()
+    {
+        $event = RequestEventBuilder::create('/test-cookie-request')
+            ->addHeader('header-1', 'value-1')
+            ->addOriginHeader('header-1', 'value-1-new');
+
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
+
+        $this->assertEquals('value-1-new', $request->headers->get('header-1')); // lowercase
+        $this->assertEquals('value-1-new', $request->header('header-1')); // lowercase
+    }
+
     public function test_file_upload_single_image()
     {
         // @TODO: take a smaller test-file for this
