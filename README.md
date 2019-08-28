@@ -54,12 +54,18 @@ lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) 
 * [X] Origin custom - Read custom headers
 * [X] Origin s3 - Read custom headers 
 * [x] Response might send headers as multiple list-items inside the response
-* [x] Attachments - Single named input (`<input type="file" name="myfile"/>`)
-* [x] Attachments - Multiple single named inputs (`<input type="file" name="myfile1"/>` `<input type="file" name="myfile1"/>`)
+* [x] Attachments - Single (`<input name="single"/>`)
+* [x] Attachments - Multiple - single named (`<input name="single_1"/>` `<input name="single_2"/>`)
+* [x] Attachments - Multiple - array based input (`<input name="file_as_array[]"/>` `<input name="file_as_array[]"/>`)
+* [x] Attachments - Multiple - array based with multiple flag (`<input name="files_as_array_multiple[]" multiple/>`)
 
 # TODOs
 
-* [ ] POST with attachments (`<input type="file" name="files[]"/>` `<input type="file" name="files[]"/>`)
+* [ ] Attachments - Multiple - single named with multiple flag (`<input name="single_with_multiple" multiple/>`)
+* [ ] Attachments - Multiple - multi-dimenionsional input name w/o multiple flag (`<input name="myfile[a][b]"/>`)
+* [ ] Attachments - Multiple - multi-dimenionsional input name w/ multiple flag (`<input name="myfile[a][b]"multiple/>`)
+* [ ] Attachments - Multiple - multi-dimenionsional input name with array w/o multiple flag (`<input name="myfile[a][b][]"/>`)
+* [ ] Attachments - Multiple - multi-dimenionsional input name with array w/ multiple flag (`<input name="myfile[a][b][]" multiple/>`)
 * [ ] Check POST with different content-types (json, x-www-form-urlencode, ..?)
 * [ ] Check 204 responses with JSON why they return "{}" instead of ""
 * [ ] Cloudfront MAY send multiple list-items for a single header
