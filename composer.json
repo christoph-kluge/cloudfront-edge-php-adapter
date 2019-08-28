@@ -15,6 +15,9 @@
     }
   },
   "autoload-dev": {
+    "files": [
+      "tests/http_build_url.php"
+    ],
     "psr-4": {
       "Sikei\\CloudfrontEdge\\Tests\\": "tests/"
     }

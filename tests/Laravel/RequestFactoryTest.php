@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use PHPUnit\Framework\TestCase;
 use Sikei\CloudfrontEdge\Laravel\RequestFactory;
 use Sikei\CloudfrontEdge\Symfony\RequestFactory as SymfonyRequestFactory;
+use Sikei\CloudfrontEdge\Tests\Helpers\RequestEventBuilder;
 
 class RequestFactoryTest extends TestCase
 {
@@ -18,11 +19,12 @@ class RequestFactoryTest extends TestCase
 
     public function test_that_transformation_will_return_laravel_request_object()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-method-get.json'), true);
+        $event = RequestEventBuilder::create('/laravel-request', 'GET');
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
         $this->assertInstanceOf(Request::class, $request);
         $this->assertEquals('GET', $request->method());
+        $this->assertEquals('/laravel-request', $request->getRequestUri());
     }
 }

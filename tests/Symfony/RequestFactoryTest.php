@@ -5,6 +5,7 @@ namespace Sikei\CloudfrontEdge\Unit\Symfony;
 use Sikei\CloudfrontEdge\Laravel\RequestFactory;
 use Sikei\CloudfrontEdge\Symfony\RequestFactory as SymfonyRequestFactory;
 use PHPUnit\Framework\TestCase;
+use Sikei\CloudfrontEdge\Tests\Helpers\RequestEventBuilder;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class RequestFactoryTest extends TestCase
@@ -16,91 +17,133 @@ class RequestFactoryTest extends TestCase
         $this->factory = new RequestFactory(new SymfonyRequestFactory());
     }
 
-    public function test_get()
+    public function test_get_request()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-method-get.json'), true);
+        $event = RequestEventBuilder::create('/test-get-request', 'GET');
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
         $this->assertEquals('GET', $request->method());
+        $this->assertEquals('test-get-request', $request->path());
+        $this->assertEquals('/test-get-request', $request->getRequestUri());
+    }
+
+    public function test_get_querystring_single_values()
+    {
+        $event = RequestEventBuilder::create('/test-query-string?limit=20&page=1');
+
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
+
+        $this->assertEquals(20, $request->get('limit'));
+        $this->assertEquals(20, $request->post('limit'));
+        $this->assertEquals(20, $request->input('limit'));
+
+        $this->assertEquals(1, $request->get('page'));
     }
 
     public function test_post()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-method-post.json'), true);
+        $event = RequestEventBuilder::create('/test-post-request', 'POST');
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
         $this->assertEquals('POST', $request->method());
+        $this->assertEquals('test-post-request', $request->path());
+        $this->assertEquals('/test-post-request', $request->getRequestUri());
     }
 
     public function test_cookies()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-cookies.json'), true);
+        $event = RequestEventBuilder::create('/test-cookie-request')
+            ->addCookie('cookie-1', 'value-1')
+            ->addCookie('cookie-2', 'value-2');
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
-        $this->assertCount(3, $request->cookies->all());
-        $this->assertCount(3, $request->cookie());
-        $this->assertSame('MyValue', $request->cookie('MyCookie'));
+        $this->assertCount(2, $request->cookies->all());
+        $this->assertCount(2, $request->cookie());
+
+        $this->assertTrue($request->cookies->has('cookie-1'));
+        $this->assertSame('value-1', $request->cookies->get('cookie-1'));
+        $this->assertSame('value-1', $request->cookie('cookie-1'));
+
+        $this->assertTrue($request->cookies->has('cookie-2'));
+        $this->assertSame('value-2', $request->cookies->get('cookie-2'));
+        $this->assertSame('value-2', $request->cookie('cookie-2'));
     }
 
     public function test_post_with_form_urlencoded_body()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-post-form-urlencoded-body.json'), true);
+        $body = [
+            'email' => 'john.doe@example.net',
+            'password' => 'john.doe@example.net',
+        ];
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $event = RequestEventBuilder::create('/test-some-form-post', 'POST')
+            ->addHeader('Content-Type', 'application/x-www-form-urlencoded')
+            ->setBody(http_build_str($body));
+
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
         $this->assertEquals('POST', $request->method());
+        $this->assertEquals('/test-some-form-post', $request->getRequestUri());
         $this->assertEquals('application/x-www-form-urlencoded', $request->header('content-type'));
 
+        // whole body
+        $this->assertSame($body, $request->input());
+        $this->assertSame($body, $request->all());
+
+        $this->assertSame('john.doe@example.net', $request->get('email'));
         $this->assertSame('john.doe@example.net', $request->input('email'));
-        $this->assertSame('john.doe@example.net', $request->input('password'));
+        $this->assertSame('john.doe@example.net', $request->post('password'));
     }
 
-    public function test_delete()
+    public function test_post_with_json()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-method-post-with-json-body.json'), true);
         $body = [
             "name" => "John Doe",
             "email" => "john.doe@example.org",
             "password" => "johns-secure-password",
         ];
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $event = RequestEventBuilder::create('/test-some-json-post', 'POST')
+            ->addHeader('Content-Type', 'application/json')
+            ->setBody(json_encode($body));
+
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
         // method and header evaluation
         $this->assertEquals('POST', $request->method());
-        $this->assertTrue($request->isJson());
+        $this->assertEquals('/test-some-json-post', $request->getRequestUri());
 
         // whole json
+        $this->assertTrue($request->isJson());
         $this->assertSame($body, $request->input());
         $this->assertSame($body, $request->all());
 
         // single keys in json
         $this->assertSame($body['email'], $request->get('email'));
         $this->assertSame($body['email'], $request->input('email'));
+        $this->assertSame($body['email'], $request->post('email'));
     }
 
     public function test_headers_single_values()
     {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-headers.json'), true);
+        $event = RequestEventBuilder::create('/test-cookie-request')
+            ->addHeader('header-1', 'value-1')
+            ->addHeader('header-2', 'value-2')
+            ->addHeader('header-3', 'value-3');
 
-        $request = $this->factory->fromCloudfrontEvent($event);
+        $request = $this->factory->fromCloudfrontEvent($event->toArray());
 
-        $this->assertEquals('no-cache', $request->header('cache-control')); // lowercase
-        $this->assertEquals('test-api.example.net', $request->header('Host')); // lettercase
-        $this->assertEquals('Amazon CloudFront', $request->header('USER-AGENT')); // uppercase
-    }
+        $this->assertEquals('value-1', $request->headers->get('header-1')); // lowercase
+        $this->assertEquals('value-1', $request->header('header-1')); // lowercase
 
-    public function test_querystring_single_values()
-    {
-        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-query-string-single-values.json'), true);
+        $this->assertEquals('value-2', $request->headers->get('Header-2')); // lettercase
+        $this->assertEquals('value-2', $request->header('Header-2')); // lettercase
 
-        $request = $this->factory->fromCloudfrontEvent($event);
-
-        $this->assertEquals(20, $request->get('limit'));
-        $this->assertEquals(1, $request->get('page'));
+        $this->assertEquals('value-3', $request->headers->get('HEADER-3')); // uppercase
+        $this->assertEquals('value-3', $request->header('HEADER-3')); // uppercase
     }
 
     public function test_file_upload_single_image()
