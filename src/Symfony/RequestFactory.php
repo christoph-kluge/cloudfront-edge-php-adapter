@@ -143,60 +143,134 @@ class RequestFactory
 
         preg_match('#multipart/form-data; boundary=(.*)#', $contentType, $matches);
 
-        $fileDelimiter = $matches['1'];
+        $fileDelimiter = $matches[1];
 
         $rawFiles = explode($fileDelimiter, $content);
 
+        // remove first element after "not-so-smart-explode"
+        $firstElement = reset($rawFiles);
+        if ($firstElement == '--') {
+            array_shift($rawFiles);
+        }
+
+        // remove last element after "not-so-smart-explode"
+        $lastElement = end($rawFiles);
+        if ($lastElement == '--' || $lastElement == "--\r\n") {
+            array_pop($rawFiles);
+        }
+
+        // remove all remaining "--" parts and trim returns and newlines
+        $rawFiles = array_map(function ($item) {
+            return trim(trim($item, '--'));
+        }, $rawFiles);
+
         $files = [];
         foreach ($rawFiles as $rawFile) {
-            if (strlen($rawFile) <= 8) { // @TODO: this is super wrong like that.. need to fix it later
-                continue;
+            list($rawFileHeaders, $fileBody) = explode("\r\n\r\n", $rawFile, 2);
+
+            $rawFileHeaders = explode("\r\n", $rawFileHeaders);
+            $rawFileHeaders = array_filter($rawFileHeaders, function ($item) use ($fileDelimiter) {
+                return stripos($item, $fileDelimiter) === false;
+            });
+
+            $fileHeaders = [];
+            foreach ($rawFileHeaders as $line) {
+                list($key, $value) = explode(': ', $line, 2);
+                $fileHeaders[strtolower($key)] = $value;
             }
 
-            list($rawFileHeaders, $fileBody) = explode("\r\n\r\n", $rawFile, 2);
+            // if content-type is not set inside the content, then it's not a file but a normal form field
+            if (!isset($fileHeaders['content-type'])) {
+                continue;
+            }
 
             $tempFile = tempnam(sys_get_temp_dir(), uniqid());
             file_put_contents($tempFile, $fileBody);
 
-            // @FIXME: I guess there is a bit smarter way to do this.. check if there is existing snippets for this
-            $fileHeaders = [];
-            foreach (explode("\r\n", $rawFileHeaders) as $headerLine) {
-                if (empty($headerLine)) {
-                    continue;
-                }
-
-//                var_dump($headerLine);
-                list($fileHEader, $fileHEaderValue) = explode(': ', $headerLine);
-
-                $fileHeaders[$fileHEader] = $fileHEaderValue;
-            }
-
-            // @FIXME: I guess there is a bit smarter way to do this.. check if there is existing snippets for this
-            preg_match('#form-data; name="(.*)"; filename="(.*)"#i', $fileHeaders['Content-Disposition'], $matches);
-
+            preg_match('#^form-data; name="(.*)"; filename="(.*)"#i', $fileHeaders['content-disposition'], $matches);
             $formName = $matches[1];
             $origFilename = $matches[2];
-            $type = $fileHeaders['Content-Type'] ?? '';
+            $type = $fileHeaders['content-type'] ?? '';
             $size = strlen($fileBody);
             $tmp_name = $tempFile;
             $error = 0; // @FIXME: check what kind of errors might appear with file uploads and if we need to take care of them
+
+            preg_match_all('#([a-z0-9-_]+)?#i', $formName, $matches);
+            $keys = array_filter($matches[0]);
+
+            $files = $this->addFile($keys, [
+                'name' => $origFilename,
+                'type' => $type,
+                'size' => $size,
+                'tmp_name' => $tmp_name,
+                'error' => $error,
+            ], null, $files);
 
 //            $_FILES['userfile']['name'] // The original name of the file on the client machine.
 //            $_FILES['userfile']['type'] // The mime type of the file, if the browser provided this information. An example would be "image/gif". This mime type is however not checked on the PHP side and therefore don't take its value for granted.
 //            $_FILES['userfile']['size'] // The size, in bytes, of the uploaded file.
 //            $_FILES['userfile']['tmp_name'] // The temporary filename of the file in which the uploaded file was stored on the server.
 //            $_FILES['userfile']['error'] // The error code associated with this file upload.
-
-            $files[$formName] = [
-                'name' => $origFilename,
-                'type' => $type,
-                'size' => $size,
-                'tmp_name' => $tmp_name,
-                'error' => $error,
-            ];
         }
 
         return $files;
+    }
+
+    private function addFile(array $inputNames, array $fileData, string $inputName = null, array $files = []): array
+    {
+        if (empty($inputNames)) {
+            if (!isset($files[$inputName])) {
+                $files[$inputName] = [];
+            }
+
+            $singleEntryExists = isset($files[$inputName]['name']) && !is_array($files[$inputName]['name']);
+            $multiEntryExists = isset($files[$inputName]['name']) && is_array($files[$inputName]['name']);
+            if ($singleEntryExists) { // transform current item to to index-based
+                $current = $files[$inputName];
+
+                // transform existing
+                $files[$inputName] = [];
+                foreach (array_keys($current) as $key) {
+                    $files[$inputName][$key][0] = $current[$key];
+                }
+
+                // add new entry
+                $idx = count($files[$inputName]['name']);
+                foreach (array_keys($fileData) as $key) {
+                    $files[$inputName][$key][$idx] = $fileData[$key];
+                }
+
+                return $files;
+
+            } elseif ($multiEntryExists) { // add new entry to existing inputName
+                $idx = count($files[$inputName]['name']);
+                foreach (array_keys($fileData) as $key) {
+                    $files[$inputName][$key][$idx] = $fileData[$key];
+                }
+                return $files;
+            }
+
+            // first entry for the inputName
+            $files[$inputName] = $fileData;
+
+            return $files;
+        }
+
+        $nextName = array_shift($inputNames);
+
+        if (!is_null($inputName)) {
+            if (isset($files[$inputName])) {
+                return [
+                    $inputName => $this->addFile($inputNames, $fileData, $nextName, $files[$inputName]),
+                ];
+            }
+
+            return [
+                $inputName => $this->addFile($inputNames, $fileData, $nextName, $files),
+            ];
+        }
+
+        return $this->addFile($inputNames, $fileData, $nextName, $files);
     }
 
     /**

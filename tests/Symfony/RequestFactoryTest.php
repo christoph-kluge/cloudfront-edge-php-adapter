@@ -216,4 +216,42 @@ class RequestFactoryTest extends TestCase
 
         $this->assertSame(4, $request->files->count());
     }
+
+    public function test_file_upload_mixed_with_form_fields()
+    {
+        // @TODO: take a smaller test-file for this
+        $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload-mutliple-mixed.json'), true);
+
+        $request = $this->factory->fromCloudfrontEvent($event);
+
+        // test uploads
+        $this->assertSame(4, $request->files->count());
+
+        // single named form inputs
+        // <input type="file" name="file1"/>
+        // <input type="file" name="file2"/>
+        $this->assertInstanceOf(UploadedFile::class, $request->files->get('file1'));
+        $this->assertInstanceOf(UploadedFile::class, $request->files->get('file2'));
+
+        // array based form inputs - example:
+        // <input type="file" name="files[]"/>
+        // <input type="file" name="files[]"/>
+        $this->assertIsArray($request->files->get('files_multiple'));
+        $this->assertCount(2, $request->files->get('files_multiple'));
+        $this->assertInstanceOf(UploadedFile::class, $request->files->get('files_multiple')[0]);
+
+        // array based form inputs with multiple key - example:
+        // <input type="file" name="files[]" multiple />
+        $this->assertIsArray($request->files->get('files'));
+        $this->assertCount(2, $request->files->get('files'));
+        $this->assertInstanceOf(UploadedFile::class, $request->files->get('files')[0]);
+
+        $this->markTestIncomplete('input fields are not yet parsed correctly');
+
+        // now test the form inputs - example:
+        // <input type="text" name="firstname" value="john">
+        // <input type="text" name="lastname" value="doe">
+        $this->assertSame('john', $request->input('firstname'));
+        $this->assertSame('doe', $request->input('lastname'));
+    }
 }
