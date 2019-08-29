@@ -10,7 +10,7 @@ class ResponseFactory
     public function toCloudfrontEvent(Response $response): array
     {
         return [
-            "status" => $response->getStatusCode(),
+            "status" => (string)$response->getStatusCode(),
             "headers" => $this->getHeaders($response),
             "body" => (string)$response->getContent(),
         ];
@@ -23,17 +23,17 @@ class ResponseFactory
     private function getHeaders(Response $response): array
     {
         $cfHeaders = [];
-        foreach ($response->headers->all() as $key => $value) {
+        foreach ($response->headers->all() as $headerName => $headerItems) {
 
-            $headers = [];
-            foreach ($value as $cookie) {
-                $headers[] = [
-                    'key' => $key,
-                    'value' => (string)$cookie,
+            $items = [];
+            foreach ($headerItems as $headerValue) {
+                $items[] = [
+                    'key' => strtolower($headerName),
+                    'value' => (string)$headerValue,
                 ];
             }
 
-            $cfHeaders[$key] = $headers;
+            $cfHeaders[strtolower($headerName)] = $items;
         }
         return $cfHeaders;
     }
