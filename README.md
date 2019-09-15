@@ -10,7 +10,66 @@ To install via [Composer](http://getcomposer.org/), use the command below, it wi
 composer require christoph-kluge/cloudfront-edge-php-adapter
 ```
 
-# Usage
+# Usage Example (long running process - one process for multiple requests)
+
+Please take care that your application MAY require adoptions to run in a long-running-process.
+
+Advantages:
+
+* Your app is always warm after ther initial request
+* Leverage full potential of opcache
+
+Performance Measurements
+
+This code runs in a production environment api. 
+Almost every endpoint responsds in <10ms (server-response time) w/o the usage of memcache/redis/..
+
+```php
+#!/opt/bin/php
+<?php declare(strict_types=1);
+
+use Bref\Runtime\LambdaRuntime;
+use Sikei\CloudfrontEdge\Laravel\RequestFactory;
+use Sikei\CloudfrontEdge\Laravel\ResponseFactory;
+
+ini_set('display_errors', '0');
+ini_set('error_log', '/dev/stderr');
+ini_set('log_errors', '1');
+error_reporting(E_ALL);
+
+$appRoot = getenv('LAMBDA_TASK_ROOT');
+require $appRoot . '/vendor/autoload.php';
+
+/** @var \App\Extensions\Foundation\Application $app */
+$app = require_once __DIR__ . '/../bootstrap/app.php';
+
+/** @var \App\Http\Kernel $http */
+$http = $app->make(Illuminate\Contracts\Http\Kernel::class);
+
+/** @var RequestFactory $requestFactory */
+$requestFactory = $app->make(RequestFactory::class);
+
+/** @var ResponseFactory $responseFactory */
+$responseFactory = $app->make(ResponseFactory::class);
+
+$lambdaRuntime = LambdaRuntime::fromEnvironmentVariable();
+
+while (true) {
+    $lambdaRuntime->processNextEvent(function (array $event) use ($http, $requestFactory, $responseFactory) : array {
+        $response = $http->handle(
+            $request = $requestFactory->fromCloudfrontEvent($event)
+        );
+
+        $cfResponse = $responseFactory->toCloudfrontEvent($response);
+
+        $http->terminate($request, $response);
+
+        return $cfResponse;
+    });
+}
+```
+
+# Usage (new process per request) 
 
 ```php
 <?php declare(strict_types=1);
