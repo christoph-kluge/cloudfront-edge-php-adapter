@@ -14,10 +14,10 @@ class RequestFactory
         $this->factory = $factory;
     }
 
-    public function fromCloudfrontEvent(array $event): Request
+    public function make(array $event): Request
     {
         return Request::createFromBase(
-            $this->factory->fromCloudfrontEvent($event)
+            $this->factory->make($event)
         );
     }
 }

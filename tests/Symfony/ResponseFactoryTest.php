@@ -27,7 +27,7 @@ class ResponseFactoryTest extends TestCase
             ])
             ->setDate($now);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         $this->assertSame($cfResponse, [
             "status" => 200,
@@ -55,7 +55,7 @@ class ResponseFactoryTest extends TestCase
             ])
             ->setDate($now);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         $this->assertSame($cfResponse, [
             "status" => 201,
@@ -79,7 +79,7 @@ class ResponseFactoryTest extends TestCase
         $response->headers->setCookie(new Cookie('my-cookie', 'my-value'));
         $response->headers->setCookie(new Cookie('my-second-cookie', 'my-second-value'));
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         $this->assertTrue(isset($cfResponse['headers']['set-cookie']));
         $this->assertCount(2, $cfResponse['headers']['set-cookie']);
@@ -102,7 +102,7 @@ class ResponseFactoryTest extends TestCase
         $response->headers->setCookie(new Cookie('my-cookie', 'my-value'));
         $response->headers->setCookie(new Cookie('my-second-cookie', 'my-second-value'));
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         // 2 default headers which are always set (Date + Cache-Control) + 2 custom headers (my-custom-header + set-cookies)
         $this->assertCount(2 + 2, $cfResponse['headers']);
@@ -134,7 +134,7 @@ class ResponseFactoryTest extends TestCase
 
         $response = new Response();
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         $this->assertIsString($cfResponse['body']);
         $this->assertEmpty($cfResponse['body']);
@@ -147,7 +147,7 @@ class ResponseFactoryTest extends TestCase
 
         $response = new JsonResponse( null, 204);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         $this->assertIsString($cfResponse['body']);
         $this->assertSame('{}', $cfResponse['body']); // Check why this is "{}"

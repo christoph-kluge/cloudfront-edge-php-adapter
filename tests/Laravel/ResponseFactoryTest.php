@@ -21,7 +21,7 @@ class ResponseFactoryTest extends TestCase
     {
         $response = new Response('my-body', 201);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         // status code
         $this->arrayHasKey('status', $cfResponse);
@@ -35,7 +35,7 @@ class ResponseFactoryTest extends TestCase
     {
         $response = new RedirectResponse('/my-redirect-url', 301);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         // status code
         $this->arrayHasKey('status', $cfResponse);
@@ -50,7 +50,7 @@ class ResponseFactoryTest extends TestCase
     {
         $response = new RedirectResponse('/my-redirect-url', 302);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         $this->arrayHasKey('status', $cfResponse);
         $this->assertSame(302, $cfResponse['status']);
@@ -60,7 +60,7 @@ class ResponseFactoryTest extends TestCase
     {
         $response = new JsonResponse(['a' => 'b']);
 
-        $cfResponse = $this->factory->toCloudfrontEvent($response);
+        $cfResponse = $this->factory->make($response);
 
         // status
         $this->arrayHasKey('status', $cfResponse);

@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ResponseFactory
 {
 
-    public function toCloudfrontEvent(Response $response): array
+    public function make(Response $response): array
     {
         return [
             "status" => (string)$response->getStatusCode(),

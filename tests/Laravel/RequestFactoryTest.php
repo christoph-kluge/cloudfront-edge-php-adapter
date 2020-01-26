@@ -21,7 +21,7 @@ class RequestFactoryTest extends TestCase
     {
         $event = RequestEventBuilder::create('/laravel-request', 'GET');
 
-        $request = $this->factory->fromCloudfrontEvent($event->toArray());
+        $request = $this->factory->make($event->toArray());
 
         $this->assertInstanceOf(Request::class, $request);
         $this->assertEquals('GET', $request->method());

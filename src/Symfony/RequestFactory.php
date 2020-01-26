@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 class RequestFactory
 {
 
-    public function fromCloudfrontEvent(array $event): Request
+    public function make(array $event): Request
     {
         $cfConfig = $event['Records'][0]['cf']['config'];
         $cfRequest = $event['Records'][0]['cf']['request'];
