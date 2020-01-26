@@ -26,82 +26,38 @@ Almost every endpoint responsds in <10ms (server-response time) w/o the usage of
 
 ```php
 #!/opt/bin/php
-<?php declare(strict_types=1);
+<?php
 
 use Bref\Runtime\LambdaRuntime;
-use Sikei\CloudfrontEdge\Laravel\RequestFactory;
-use Sikei\CloudfrontEdge\Laravel\ResponseFactory;
-
-ini_set('display_errors', '0');
-ini_set('error_log', '/dev/stderr');
-ini_set('log_errors', '1');
-error_reporting(E_ALL);
 
 $appRoot = getenv('LAMBDA_TASK_ROOT');
 require $appRoot . '/vendor/autoload.php';
 
 /** @var \App\Extensions\Foundation\Application $app */
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once $appRoot . '/bootstrap/app.php';
 
-/** @var \App\Http\Kernel $http */
-$http = $app->make(Illuminate\Contracts\Http\Kernel::class);
-
-/** @var RequestFactory $requestFactory */
-$requestFactory = $app->make(RequestFactory::class);
-
-/** @var ResponseFactory $responseFactory */
-$responseFactory = $app->make(ResponseFactory::class);
+/** @var CloudfrontEdgeHandler $handler */
+$handler = $app->make(CloudfrontEdgeHandler::class);
 
 $lambdaRuntime = LambdaRuntime::fromEnvironmentVariable();
-
 while (true) {
-    $lambdaRuntime->processNextEvent(function (array $event) use ($http, $requestFactory, $responseFactory) : array {
-        $response = $http->handle(
-            $request = $requestFactory->fromCloudfrontEvent($event)
-        );
-
-        $cfResponse = $responseFactory->toCloudfrontEvent($response);
-
-        $http->terminate($request, $response);
-
-        return $cfResponse;
-    });
+    $lambdaRuntime->processNextEvent($handler);
 }
 ```
 
-# Usage (new process per request) 
-
+# Usage (new process per request)
+ 
 ```php
-<?php declare(strict_types=1);
+#!/opt/bin/php
+<?php
 
-use App\Extensions\CloudfrontEdge\Laravel\RequestFactory;
-use App\Extensions\CloudfrontEdge\Laravel\ResponseFactory;
-
-require __DIR__ . '/../bootstrap/autoload.php';
+$appRoot = getenv('LAMBDA_TASK_ROOT');
+require $appRoot . '/vendor/autoload.php';
 
 /** @var \Illuminate\Foundation\Application $app */
-$app = require_once __DIR__ . '/../bootstrap/app.php';
+$app = require_once $appRoot . '/bootstrap/app.php';
 
-/** @var \App\Http\Kernel $kernel */
-$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-
-/** @var RequestFactory $requestFactory */
-$requestFactory = $app->make(RequestFactory::class);
-
-/** @var ResponseFactory $responseFactory */
-$responseFactory = $app->make(ResponseFactory::class);
-
-lambda(function (array $event) use ($kernel, $requestFactory, $responseFactory) : array {
-    $response = $kernel->handle(
-        $request = $requestFactory->fromCloudfrontEvent($event)
-    );
-
-    $cfResponse = $responseFactory->toCloudfrontEvent($response);
-
-    $kernel->terminate($request, $response);
-
-    return $cfResponse;
-});
+lambda($app->make(CloudfrontEdgeHandler::class));
 ```
 
 # Features
