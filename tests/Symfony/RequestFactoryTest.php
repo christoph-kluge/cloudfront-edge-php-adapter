@@ -2,6 +2,7 @@
 
 namespace Sikei\CloudfrontEdge\Unit\Symfony;
 
+use Bref\Context\ContextBuilder;
 use Sikei\CloudfrontEdge\Laravel\RequestFactory;
 use Sikei\CloudfrontEdge\Symfony\RequestFactory as SymfonyRequestFactory;
 use PHPUnit\Framework\TestCase;
@@ -11,17 +12,19 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class RequestFactoryTest extends TestCase
 {
     private $factory;
+    private $context;
 
     public function setUp(): void
     {
         $this->factory = new RequestFactory(new SymfonyRequestFactory());
+        $this->context = (new ContextBuilder())->buildContext();
     }
 
     public function test_get_request()
     {
         $event = RequestEventBuilder::create('/test-get-request', 'GET');
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertEquals('GET', $request->method());
         $this->assertEquals('test-get-request', $request->path());
@@ -32,7 +35,7 @@ class RequestFactoryTest extends TestCase
     {
         $event = RequestEventBuilder::create('/test-query-string?limit=20&page=1');
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertEquals(20, $request->get('limit'));
         $this->assertEquals(20, $request->post('limit'));
@@ -45,7 +48,7 @@ class RequestFactoryTest extends TestCase
     {
         $event = RequestEventBuilder::create('/test-post-request', 'POST');
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertEquals('POST', $request->method());
         $this->assertEquals('test-post-request', $request->path());
@@ -58,7 +61,7 @@ class RequestFactoryTest extends TestCase
             ->addCookie('cookie-1', 'value-1')
             ->addCookie('cookie-2', 'value-2');
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertCount(2, $request->cookies->all());
         $this->assertCount(2, $request->cookie());
@@ -83,7 +86,7 @@ class RequestFactoryTest extends TestCase
             ->addHeader('Content-Type', 'application/x-www-form-urlencoded')
             ->setBody(http_build_str($body));
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertEquals('POST', $request->method());
         $this->assertEquals('/test-some-form-post', $request->getRequestUri());
@@ -110,7 +113,7 @@ class RequestFactoryTest extends TestCase
             ->addHeader('Content-Type', 'application/json')
             ->setBody(json_encode($body));
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         // method and header evaluation
         $this->assertEquals('POST', $request->method());
@@ -134,7 +137,7 @@ class RequestFactoryTest extends TestCase
             ->addHeader('header-2', 'value-2')
             ->addHeader('header-3', 'value-3');
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertEquals('value-1', $request->headers->get('header-1')); // lowercase
         $this->assertEquals('value-1', $request->header('header-1')); // lowercase
@@ -153,7 +156,7 @@ class RequestFactoryTest extends TestCase
             ->addHeader('header-1', 'value-1')
             ->addOriginHeader('header-1', 'value-1-new');
 
-        $request = $this->factory->make($event->toArray());
+        $request = $this->factory->make($event->toArray(), $this->context);
 
         $this->assertEquals('value-1-new', $request->headers->get('header-1')); // lowercase
         $this->assertEquals('value-1-new', $request->header('header-1')); // lowercase
@@ -165,7 +168,7 @@ class RequestFactoryTest extends TestCase
         $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload.json'), true);
 
         // vendor/symfony/http-foundation/Tests/FileBagTest.php
-        $request = $this->factory->make($event);
+        $request = $this->factory->make($event, $this->context);
 
         $this->assertSame(1, $request->files->count());
 
@@ -183,7 +186,7 @@ class RequestFactoryTest extends TestCase
         $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload-multiple.json'), true);
 
         // vendor/symfony/http-foundation/Tests/FileBagTest.php
-        $request = $this->factory->make($event);
+        $request = $this->factory->make($event, $this->context);
 
         $this->assertSame(2, $request->files->count());
 
@@ -212,7 +215,7 @@ class RequestFactoryTest extends TestCase
         $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload-mutliple-mixed.json'), true);
 
         // vendor/symfony/http-foundation/Tests/FileBagTest.php
-        $request = $this->factory->make($event);
+        $request = $this->factory->make($event, $this->context);
 
         $this->assertSame(4, $request->files->count());
     }
@@ -222,7 +225,7 @@ class RequestFactoryTest extends TestCase
         // @TODO: take a smaller test-file for this
         $event = json_decode(file_get_contents(__DIR__ . '/../files/test-file-upload-mutliple-mixed.json'), true);
 
-        $request = $this->factory->make($event);
+        $request = $this->factory->make($event, $this->context);
 
         // test uploads
         $this->assertSame(4, $request->files->count());

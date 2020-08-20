@@ -2,12 +2,13 @@
 
 namespace Sikei\CloudfrontEdge\Symfony;
 
+use Bref\Context\Context;
 use Symfony\Component\HttpFoundation\Response;
 
 class ResponseFactory
 {
 
-    public function make(Response $response): array
+    public function make(Response $response, Context $context, array $event): array
     {
         return [
             "status" => (string)$response->getStatusCode(),

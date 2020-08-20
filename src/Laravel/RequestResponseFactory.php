@@ -1,5 +1,6 @@
 <?php namespace Sikei\CloudfrontEdge\Laravel;
 
+use Bref\Context\Context;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -15,13 +16,13 @@ class RequestResponseFactory
         $this->response = $response;
     }
 
-    public function request(array $event): Request
+    public function request(array $event, Context $context): Request
     {
-        return $this->request->make($event);
+        return $this->request->make($event, $context);
     }
 
-    public function response(Response $response): array
+    public function response(Response $response, Context $context, array $event): array
     {
-        return $this->response->make($response);
+        return $this->response->make($response, $context, $event);
     }
 }

@@ -1,5 +1,6 @@
 <?php namespace Sikei\CloudfrontEdge\Laravel;
 
+use Bref\Context\Context;
 use Illuminate\Contracts\Http\Kernel;
 use Sikei\CloudfrontEdge\ProxyInterface;
 
@@ -24,22 +25,22 @@ class CloudfrontEventHandler
         return $this;
     }
 
-    public function __invoke(array $event): array
+    public function __invoke(array $event, Context $context): array
     {
         foreach ($this->proxies as $proxy) {
-            $event = $proxy->incoming($event);
+            $event = $proxy->incoming($event, $context);
         }
 
         $response = $this->kernel->handle(
-            $request = $this->factory->request($event)
+            $request = $this->factory->request($event, $context)
         );
 
-        $cfResponse = $this->factory->response($response);
+        $cfResponse = $this->factory->response($response, $context, $event);
 
         $this->kernel->terminate($request, $response);
 
         foreach ($this->proxies as $proxy) {
-            $cfResponse = $proxy->outgoing($cfResponse);
+            $cfResponse = $proxy->outgoing($cfResponse, $context);
         }
 
         return $cfResponse;

@@ -2,12 +2,13 @@
 
 namespace Sikei\CloudfrontEdge\Symfony;
 
+use Bref\Context\Context;
 use Symfony\Component\HttpFoundation\Request;
 
 class RequestFactory
 {
 
-    public function make(array $event): Request
+    public function make(array $event, Context $context): Request
     {
         $cfConfig = $event['Records'][0]['cf']['config'];
         $cfRequest = $event['Records'][0]['cf']['request'];
@@ -113,7 +114,7 @@ class RequestFactory
         $cookies = array_filter(explode(';', $cookieHeaderLine));
 
         $cookies = array_map(function ($item) {
-            list($key, $value) = explode('=', $item, 2);
+            [$key, $value] = explode('=', $item, 2);
             return [
                 'key' => trim($key),
                 'value' => urldecode(trim($value)),
@@ -166,7 +167,7 @@ class RequestFactory
 
         $files = [];
         foreach ($rawFiles as $rawFile) {
-            list($rawFileHeaders, $fileBody) = explode("\r\n\r\n", $rawFile, 2);
+            [$rawFileHeaders, $fileBody] = explode("\r\n\r\n", $rawFile, 2);
 
             $rawFileHeaders = explode("\r\n", $rawFileHeaders);
             $rawFileHeaders = array_filter($rawFileHeaders, function ($item) use ($fileDelimiter) {
@@ -175,7 +176,7 @@ class RequestFactory
 
             $fileHeaders = [];
             foreach ($rawFileHeaders as $line) {
-                list($key, $value) = explode(': ', $line, 2);
+                [$key, $value] = explode(': ', $line, 2);
                 $fileHeaders[strtolower($key)] = $value;
             }
 

@@ -2,6 +2,7 @@
 
 namespace Sikei\CloudfrontEdge\Unit\Symfony;
 
+use Bref\Context\ContextBuilder;
 use Sikei\CloudfrontEdge\Symfony\ResponseFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -11,10 +12,14 @@ use Symfony\Component\HttpFoundation\Response;
 class ResponseFactoryTest extends TestCase
 {
     private $factory;
+    private $context;
+    private $event;
 
     public function setUp(): void
     {
         $this->factory = new ResponseFactory();
+        $this->context = (new ContextBuilder())->buildContext();
+        $this->event = [];
     }
 
     public function test_simple_response()
@@ -27,10 +32,10 @@ class ResponseFactoryTest extends TestCase
             ])
             ->setDate($now);
 
-        $cfResponse = $this->factory->make($response);
+        $cfResponse = $this->factory->make($response, $this->context, $this->event);
 
         $this->assertSame($cfResponse, [
-            "status" => 200,
+            "status" => '200',
             "headers" => [
                 'cache-control' => [[
                     'key' => 'cache-control',
@@ -55,10 +60,10 @@ class ResponseFactoryTest extends TestCase
             ])
             ->setDate($now);
 
-        $cfResponse = $this->factory->make($response);
+        $cfResponse = $this->factory->make($response, $this->context, $this->event);
 
         $this->assertSame($cfResponse, [
-            "status" => 201,
+            "status" => '201',
             "headers" => [
                 'cache-control' => [[
                     'key' => 'cache-control',
@@ -79,7 +84,7 @@ class ResponseFactoryTest extends TestCase
         $response->headers->setCookie(new Cookie('my-cookie', 'my-value'));
         $response->headers->setCookie(new Cookie('my-second-cookie', 'my-second-value'));
 
-        $cfResponse = $this->factory->make($response);
+        $cfResponse = $this->factory->make($response, $this->context, $this->event);
 
         $this->assertTrue(isset($cfResponse['headers']['set-cookie']));
         $this->assertCount(2, $cfResponse['headers']['set-cookie']);
@@ -102,7 +107,7 @@ class ResponseFactoryTest extends TestCase
         $response->headers->setCookie(new Cookie('my-cookie', 'my-value'));
         $response->headers->setCookie(new Cookie('my-second-cookie', 'my-second-value'));
 
-        $cfResponse = $this->factory->make($response);
+        $cfResponse = $this->factory->make($response, $this->context, $this->event);
 
         // 2 default headers which are always set (Date + Cache-Control) + 2 custom headers (my-custom-header + set-cookies)
         $this->assertCount(2 + 2, $cfResponse['headers']);
@@ -134,7 +139,7 @@ class ResponseFactoryTest extends TestCase
 
         $response = new Response();
 
-        $cfResponse = $this->factory->make($response);
+        $cfResponse = $this->factory->make($response, $this->context, $this->event);
 
         $this->assertIsString($cfResponse['body']);
         $this->assertEmpty($cfResponse['body']);
@@ -145,9 +150,9 @@ class ResponseFactoryTest extends TestCase
         // The Lambda function result failed validation: The body is not a string, is not an object, or exceeds the maximum size.
         // https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/http-502-bad-gateway.html
 
-        $response = new JsonResponse( null, 204);
+        $response = new JsonResponse(null, 204);
 
-        $cfResponse = $this->factory->make($response);
+        $cfResponse = $this->factory->make($response, $this->context, $this->event);
 
         $this->assertIsString($cfResponse['body']);
         $this->assertSame('{}', $cfResponse['body']); // Check why this is "{}"
