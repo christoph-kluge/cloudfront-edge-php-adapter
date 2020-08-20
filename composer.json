@@ -24,6 +24,7 @@
   },
   "require": {},
   "require-dev": {
+    "bref/bref": "^0.5.3",
     "illuminate/http": "^5.8",
     "symfony/http-foundation": "^4.3",
     "phpunit/phpunit": "^8.3"
